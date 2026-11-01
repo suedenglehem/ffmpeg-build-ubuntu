@@ -47,13 +47,18 @@ su apt-get install -y --no-install-recommends \
   libcodec2-dev libmodplug-dev libopenmpt-dev libmysofa-dev \
   librist-dev libssh-dev libzmq3-dev libcurl4-openssl-dev \
   libv4l-dev libxml2-dev libx11-dev libxext-dev xutils-dev \
-  libvpl-dev libdrm-dev libva-dev libvdpau-dev libnuma-dev \
+  libvpl-dev libmfx-gen1.2 libdrm-dev libva-dev libvdpau-dev libnuma-dev \
   libssl-dev zlib1g-dev libbz2-dev liblzma-dev libpng-dev libjpeg-dev \
   libtiff-dev libopenexr-dev
 
 # Intel media driver (QSV/VAAPI runtime for the iGPU).  Intel's apt repo is
 # discontinued (403), so build intel/media-driver from source.  Skipped on
 # hosts without an Intel iGPU (QSV=no).
+# NOTE: on noble the shipped libvpl dispatcher (2023.3.0) requires the
+# libmfx-gen 1.3 implementation, but Intel's 1.3 binary is gone and Ubuntu
+# ships 1.2 — so ffmpeg's *qsv* encoders stay unusable; the *vaapi*
+# encoders (h264/hevc_vaapi) work through the same iHD driver.
+# (RPL-S UHD 770: AV1 decode only, no AV1 encode.)
 if [ "$QSV" = yes ] && ! ldconfig -p | grep -q 'libmfx-gen'; then
   log "intel-media-driver (QSV/VAAPI runtime)"
   [ -d media-driver/.git ] && git -C media-driver fetch -q --tags \
@@ -108,6 +113,7 @@ if [ "$QSV" = yes ] && ! ldconfig -p | grep -q 'libmfx-gen'; then
         -DFull_Open_Source_Support=yes -DENABLE_VCPE=OFF -DENABLE_OCL=OFF
   cmake --build media-driver/build -j"$JOBS"
   su cmake --install media-driver/build
+  su ldconfig   # refresh cache so re-runs skip this section
 fi
 
 # ------------------------------------------------------- 2. source libs
@@ -229,7 +235,8 @@ pc srt libsrt; pc librist librist; pc libssh libssh; pc libzmq libzmq
 pc freetype2 libfreetype; pc fontconfig libfontconfig; pc fribidi libfribidi
 pc harfbuzz libharfbuzz; pc libass libass
 pc codec2 libcodec2; pc libmodplug libmodplug; pc libopenmpt libopenmpt; pc libmysofa libmysofa
-pc libcurl libcurl; pc openssl openssl; pc vpl libvpl; pc libva vaapi
+pc openssl openssl; pc vpl libvpl; pc libva vaapi
+pc libcurl protocol=curl   # curl is a protocol in ffmpeg, not a lib
 pc libvvenc libvvenc
 pc libv4l2 libv4l2; pc libxml-2.0 libxml2; pc whisper whisper
 NV=()

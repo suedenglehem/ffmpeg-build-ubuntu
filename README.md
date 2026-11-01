@@ -37,6 +37,17 @@ FFBUILD_SRC=/dd2/andrei/ffmpeg bash build-ffmpeg.sh  # source tree location
 - Requires CUDA at `/usr/local/cuda-13.0` (override with `CUDA=`); QSV and
   NVENC sections self-gate when the hardware/toolchain is absent.
 
+## Known limits (verified 2026-11)
+
+- **NVENC needs NVIDIA driver ≥ 610** (ffmpeg 9 requires NVENC API 13.1;
+  driver 595.x exposes 13.0 → "Driver does not support the required nvenc
+  API version"). Upgrading the driver makes NVENC work with the same binary.
+- **QSV on Ubuntu noble is packaged broken**: the shipped libvpl dispatcher
+  (2023.3.0) requires the libmfx-gen **1.3** implementation, Intel's 1.3
+  binary is discontinued, Ubuntu ships 1.2 → ffmpeg's `*_*_qsv` encoders
+  fail. Use `h264_vaapi` / `hevc_vaapi` — same iHD driver, same hardware.
+- Raptor-Lake UHD 770 iGPU: AV1 **decode** only (no AV1 encode via VAAPI).
+
 ## Notes
 
 - `xvid` is fetched from downloads.xvid.com; the build skips it with a warning
