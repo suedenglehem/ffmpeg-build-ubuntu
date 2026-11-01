@@ -117,7 +117,7 @@ else git clone -q --depth 1 https://github.com/FFmpeg/nv-codec-headers.git; fi
 su make -C nv-codec-headers install PREFIX=$PREFIX
 
 log "SVT-AV1 (AV1 encoder)"
-if ! pkg-config --exists svt-av1; then
+if ! pkg-config --exists SvtAv1Enc; then
   [ -d SVT-AV1/.git ] && git -C SVT-AV1 fetch -q --tags \
     || git clone -q --filter=blob:none https://gitlab.com/AOMediaCodec/SVT-AV1.git
   TAG=$(git -C SVT-AV1 tag -l 'v[0-9]*' | sort -V | tail -1)
@@ -175,7 +175,7 @@ if ! pkg-config --exists libvvenc; then
 fi
 
 log "xvid (MPEG-4 encoder)"
-if [ ! -e /usr/include/xvid.h ]; then
+if [ ! -e /usr/include/xvid.h ] && [ ! -e /usr/local/include/xvid.h ]; then
   if wget -q -O xvidcore.tar.gz https://downloads.xvid.com/downloads/xvidcore-1.3.7.tar.gz 2>/dev/null \
      && tar tzf xvidcore.tar.gz >/dev/null 2>&1; then
     tar xzf xvidcore.tar.gz
@@ -213,23 +213,23 @@ cd "$SRC/ffmpeg"
 E=()
 pc()  { pkg-config --exists "$1" 2>/dev/null && E+=(--enable-"$2") || true; }
 hdr() { [ -e "$1" ] && E+=(--enable-"$2") || true; }
-pc libx264 libx264;  pc libx265 libx265;  pc aom libaom
-pc svt-av1 libsvtav1; pc dav1d libdav1d;  pc vpx libvpx;  pc kvazaar libkvazaar
-hdr /usr/include/xvid.h libxvid
+pc x264 libx264;     pc x265 libx265;     pc aom libaom
+pc SvtAv1Enc libsvtav1; pc dav1d libdav1d; pc vpx libvpx;  pc kvazaar libkvazaar
+hdr /usr/local/include/xvid.h libxvid; hdr /usr/include/xvid.h libxvid
 hdr /usr/include/lame/lame.h libmp3lame
 pc fdk-aac libfdk-aac
 pc opencore-amrnb libopencore-amrnb; pc opencore-amrwb libopencore-amrwb
 pc vo-amrwbenc libvo-amrwbenc
 pc opus libopus; pc vorbis libvorbis; pc theora libtheora; pc speex libspeex
-pc libtwolame libtwolame; hdr /usr/include/shine/shine.h libshine; hdr /usr/include/gsm/gsm.h libgsm
-pc libopenjp2 libopenjpeg; pc libwebp libwebp; pc libjxl libjxl; pc zbar libzbar
+pc twolame libtwolame; pc shine libshine; hdr /usr/include/gsm/gsm.h libgsm
+pc libopenjp2 libopenjpeg; pc libwebp libwebp; pc libjxl libjxl
 pc zvbi libzvbi; pc soxr libsoxr; pc rubberband librubberband; pc vidstab libvidstab
-pc libvmaf libvmaf; pc zimg libzimg; pc libaribb24 libaribb24; pc libbluray libbluray
-pc srt libsrt; pc rist librist; pc libssh libssh; pc libzmq libzmq
+pc libvmaf libvmaf; pc zimg libzimg; pc aribb24 libaribb24; pc libbluray libbluray
+pc srt libsrt; pc librist librist; pc libssh libssh; pc libzmq libzmq
 pc freetype2 libfreetype; pc fontconfig libfontconfig; pc fribidi libfribidi
-pc harfbuzz libharfbuzz; pc ass libass
-pc libcodec2 libcodec2; pc libmodplug libmodplug; pc libopenmpt libopenmpt; pc libmysofa libmysofa
-pc libcurl libcurl; pc openssl openssl; pc libvpl libvpl; pc libva vaapi
+pc harfbuzz libharfbuzz; pc libass libass
+pc codec2 libcodec2; pc libmodplug libmodplug; pc libopenmpt libopenmpt; pc libmysofa libmysofa
+pc libcurl libcurl; pc openssl openssl; pc vpl libvpl; pc libva vaapi
 pc libvvenc libvvenc
 pc libv4l2 libv4l2; pc libxml-2.0 libxml2; pc whisper whisper
 NV=()
